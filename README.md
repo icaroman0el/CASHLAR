@@ -65,6 +65,7 @@ Quando subir para a Vercel, troque para a URL real:
 - `Site URL`: `https://seu-dominio.com`
 - `Redirect URLs`:
   - `https://seu-dominio.com/auth/confirm`
+  - `https://seu-dominio.com/redefinir-senha`
 
 ## Template de email de confirmacao
 
@@ -145,12 +146,46 @@ git push -u origin main
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `NEXT_PUBLIC_SITE_URL`
-4. Em producao, defina `NEXT_PUBLIC_SITE_URL` com sua URL publica final.
-5. Depois do deploy, volte no Supabase e atualize `Site URL` e `Redirect URLs`.
+4. Configure essas variaveis pelo menos em `Production`.
+5. Se voce tambem testar em preview, replique em `Preview`.
+6. Em producao, defina `NEXT_PUBLIC_SITE_URL` com sua URL publica final.
+7. Depois do deploy, volte no Supabase e atualize `Site URL` e `Redirect URLs`.
 
 Observacao:
 
 - O helper [lib/site.ts](./lib/site.ts) ja tenta usar `NEXT_PUBLIC_SITE_URL` e, na Vercel, tambem faz fallback para a URL do ambiente quando necessario.
+
+## Problemas comuns na Vercel
+
+### Erro 500 falando que faltam URL e Key do Supabase
+
+Se a Vercel mostrar um erro parecido com:
+
+```txt
+Your project's URL and Key are required to create a Supabase client
+```
+
+isso significa que o deploy subiu sem estas variaveis:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+Para corrigir:
+
+1. Abra o projeto na Vercel.
+2. Entre em `Settings > Environment Variables`.
+3. Cadastre:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `NEXT_PUBLIC_SITE_URL`
+4. Salve.
+5. Rode um novo deploy.
+
+### Reset de senha abre a pagina errada
+
+Confirme no Supabase `Authentication > URL Configuration` que a rota abaixo esta liberada:
+
+- `https://seu-dominio.com/redefinir-senha`
 
 ## Estrutura importante
 

@@ -23,6 +23,14 @@ export const metadata: Metadata = {
   title: "Cashlar | Controle Financeiro",
   description: "Sistema de controle financeiro pessoal com Next.js, Supabase e suporte a PWA.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png", sizes: "256x256" },
+      { url: "/icon", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
