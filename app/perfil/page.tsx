@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { AppNavbar } from "@/components/app-navbar";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary, localeCookieName, normalizeLocale } from "@/lib/i18n";
+import { rethrowIfNextControlFlow } from "@/lib/next-errors";
 import { updatePassword, updateProfileName } from "@/app/perfil/actions";
 
 type ProfilePageProps = {
@@ -10,12 +11,31 @@ type ProfilePageProps = {
 };
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
-  const [{ kind, message }, supabase] = await Promise.all([searchParams, createClient()]);
+  const { kind, message } = await searchParams;
   const locale = normalizeLocale((await cookies()).get(localeCookieName)?.value);
   const dictionary = getDictionary(locale);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let supabase;
+
+  try {
+    supabase = await createClient();
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    console.error("Failed to create Supabase server client on profile page", error);
+    redirect("/login");
+  }
+
+  let user = null;
+
+  try {
+    const {
+      data: { user: authenticatedUser },
+    } = await supabase.auth.getUser();
+
+    user = authenticatedUser;
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    console.error("Failed to restore Supabase session on profile page", error);
+  }
 
   if (!user) {
     redirect("/login");

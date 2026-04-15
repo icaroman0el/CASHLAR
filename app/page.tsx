@@ -1,13 +1,32 @@
 import { redirect } from "next/navigation";
 import { FinanceDashboard } from "@/components/finance-dashboard";
+import { rethrowIfNextControlFlow } from "@/lib/next-errors";
 import { createClient } from "@/lib/supabase/server";
 import type { ReceivedMonthShare, TransactionRecord } from "@/lib/types";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let supabase;
+
+  try {
+    supabase = await createClient();
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    console.error("Failed to create Supabase server client on home", error);
+    redirect("/login");
+  }
+
+  let user = null;
+
+  try {
+    const {
+      data: { user: authenticatedUser },
+    } = await supabase.auth.getUser();
+
+    user = authenticatedUser;
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    console.error("Failed to restore Supabase session on home", error);
+  }
 
   if (!user) {
     redirect("/login");
@@ -25,7 +44,15 @@ export default async function Home() {
       .order("transaction_date", { ascending: false })
       .order("created_at", { ascending: false }),
     supabase.rpc("get_received_month_shares"),
-  ]);
+  ]).catch((error) => {
+    console.error("Failed to load home dashboard data", error);
+
+    return [
+      { data: null },
+      { data: [] },
+      { data: [] },
+    ] as const;
+  });
 
   return (
     <FinanceDashboard

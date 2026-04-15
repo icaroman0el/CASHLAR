@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { AuthCard } from "@/components/auth-card";
 import { signup } from "@/app/login/actions";
 import { getDictionary, localeCookieName, normalizeLocale } from "@/lib/i18n";
+import { rethrowIfNextControlFlow } from "@/lib/next-errors";
 import { createClient } from "@/lib/supabase/server";
 
 type SignupPageProps = {
@@ -10,12 +11,22 @@ type SignupPageProps = {
 };
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
-  const [{ message, kind }, supabase] = await Promise.all([searchParams, createClient()]);
+  const { message, kind } = await searchParams;
   const locale = normalizeLocale((await cookies()).get(localeCookieName)?.value);
   const dictionary = getDictionary(locale);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user: authenticatedUser },
+    } = await supabase.auth.getUser();
+
+    user = authenticatedUser;
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    console.error("Failed to restore Supabase session on signup page", error);
+  }
 
   if (user) {
     redirect("/");

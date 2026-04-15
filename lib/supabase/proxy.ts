@@ -6,34 +6,41 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
-  const { url, publishableKey } = getSupabaseConfig();
 
-  const supabase = createServerClient(
-    url,
-    publishableKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => {
-            request.cookies.set(name, value);
-          });
+  try {
+    const { url, publishableKey } = getSupabaseConfig();
 
-          response = NextResponse.next({
-            request,
-          });
+    const supabase = createServerClient(
+      url,
+      publishableKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => {
+              request.cookies.set(name, value);
+            });
 
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
-          });
+            response = NextResponse.next({
+              request,
+            });
+
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            });
+          },
         },
       },
-    },
-  );
+    );
 
-  await supabase.auth.getUser();
-
-  return response;
+    await supabase.auth.getUser();
+    return response;
+  } catch (error) {
+    console.error("updateSession failed", error);
+    return NextResponse.next({
+      request,
+    });
+  }
 }

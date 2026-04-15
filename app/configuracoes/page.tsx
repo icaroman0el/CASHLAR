@@ -1,13 +1,32 @@
 import { redirect } from "next/navigation";
 import { AppNavbar } from "@/components/app-navbar";
 import { SettingsView } from "@/components/settings-view";
+import { rethrowIfNextControlFlow } from "@/lib/next-errors";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let supabase;
+
+  try {
+    supabase = await createClient();
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    console.error("Failed to create Supabase server client on settings page", error);
+    redirect("/login");
+  }
+
+  let user = null;
+
+  try {
+    const {
+      data: { user: authenticatedUser },
+    } = await supabase.auth.getUser();
+
+    user = authenticatedUser;
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    console.error("Failed to restore Supabase session on settings page", error);
+  }
 
   if (!user) {
     redirect("/login");
