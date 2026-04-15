@@ -2,6 +2,12 @@
 
 Sistema de controle financeiro com `Next.js`, `TypeScript`, `Supabase Auth` e suporte a `PWA`.
 
+## Contexto rapido do projeto
+
+Para retomar o projeto em outra sessao sem perder tempo, veja tambem:
+
+- [docs/PROJECT_CONTEXT.md](./docs/PROJECT_CONTEXT.md)
+
 ## O que este projeto entrega
 
 - Login com email e senha
